@@ -9,7 +9,7 @@ from fastapi.responses import HTMLResponse
 from fastapi.middleware.cors import CORSMiddleware
 
 from .connection_manager import ConnectionManager
-from .user_manager import UserManager
+from .users_service_api import UsersServiceApi
 from .render_server_api import RenderServerAPI
 from .utils.logging import get_logger
 from .rabbit import Rabbit
@@ -18,9 +18,9 @@ from .schemas import Command, Response, Message, MessagesLevels
 
 
 conn_manager = ConnectionManager()
-user_manager = UserManager(Config.USERNAMES_FILE, Config.COLORS_FILE)
 render_server = RenderServerAPI()
 rabbit = Rabbit(Config.RABBITMQ_URI)
+user_service_api = UsersServiceApi(rabbit)
 logger = get_logger("App")
 
 
@@ -28,8 +28,7 @@ logger = get_logger("App")
 async def lifespan(app: FastAPI):
     await rabbit.connect()
     await rabbit.create_channel()
-    users_to_create_queue = await rabbit.declare_queue("users_to_create")
-
+    await user_service_api.start()
     yield
     await rabbit.close_channel()
     await rabbit.close()
@@ -75,7 +74,7 @@ async def websocket_endpoint(websocket: WebSocket):
     _process_response = partial(process_response, websocket)
 
     conn_id = await conn_manager.connect(websocket)
-    _, username, color = user_manager.create_user(conn_id)
+    _, username, color = await user_service_api.create_user(conn_id)
 
     result, msgs = await render_server.process_command(
         Command(
@@ -106,6 +105,8 @@ async def websocket_endpoint(websocket: WebSocket):
             await _process_response(result, msgs)
 
         except WebSocketDisconnect:
+            conn_id, deleted = await user_service_api.delete_user(conn_id)
+            print(f"User {conn_id} deleted!")
             result, msgs = await render_server.process_command(
                 Command(
                     user_id=str(conn_id),
