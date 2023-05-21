@@ -92,27 +92,29 @@
             }
 
             ws.onmessage = message => {
-            const response = JSON.parse(message.data);
+                const response = JSON.parse(message.data);
 
-            if (!response.success) { return }
+                if (!response.success) { return }
 
-            if (response.method == "UPDATE_BOARD") {
-                for(let y=0; y<response.payload.board.length; y++) {
-                    for(let x=0; x<response.payload.board[y].length; x++) {
-                        const color = response.payload.board[y][x];
-                        const cellObject = document.querySelector(`.cell[data-x='${x}'][data-y='${y}']`);
-                        cellObject.style.backgroundColor = color
+                if (response.method == "UPDATE_BOARD") {
+                    for(let y=0; y<response.payload.board.length; y++) {
+                        for(let x=0; x<response.payload.board[y].length; x++) {
+                            const color = response.payload.board[y][x];
+                            console.log(`Color: ${color}`)
+                            console.log(`selector: .cell[data-x='${x}'][data-y='${y}']`)
+                            const cellObject = document.querySelector(`.cell[data-x='${x}'][data-y='${y}']`);
+                            cellObject.style.backgroundColor = color
+                        }
                     }
+                } else if (response.method == "MSG") {
+                        let li = document.createElement("li")
+                        console.log(li)
+                        console.log(response.text)
+                        li.appendChild(document.createTextNode(response.text))
+                        console.log(li)
+                        document.getElementById("log").appendChild(li)
+                        console.log(document.getElementById("log"))
                 }
-            } else if (response.method == "MSG") {
-                    let li = document.createElement("li")
-                    console.log(li)
-                    console.log(response.text)
-                    li.appendChild(document.createTextNode(response.text))
-                    console.log(li)
-                    document.getElementById("log").appendChild(li)
-                    console.log(document.getElementById("log"))
-            }
 
             };
             const cells = document.querySelectorAll(".cell");

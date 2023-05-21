@@ -5,8 +5,8 @@ from app.config import Config
 from app.utils.logging import get_logger
 
 
-class UsersServiceApi:
-    _logger = get_logger("UsersServiceApi")
+class UsersServiceClient:
+    _logger = get_logger("UsersServiceClient")
 
     def __init__(self, rabbit: Rabbit):
         self.rabbit = rabbit

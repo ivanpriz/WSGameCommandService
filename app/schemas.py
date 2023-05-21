@@ -45,6 +45,7 @@ class Response:
 class Message:
     level: Literal[MessagesLevels.ERROR.value, MessagesLevels.INFO.value, MessagesLevels.DEBUG.value]
     text: str
+    conn_id: str
     method: Literal[ResponseMethods.MSG.value] = ResponseMethods.MSG.value
     success: bool = True
 

@@ -63,7 +63,7 @@ class RPCClient:
             routing_key=self.publish_routing_key,
         )
         self._logger.debug(
-            "RPC client for q %s published msg with corr_id %s",
+            "RPC client for q %s published log with corr_id %s",
             self.publish_routing_key,
             correlation_id,
         )
