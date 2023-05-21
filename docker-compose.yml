@@ -1,0 +1,21 @@
+version: "3.2"
+volumes: 
+    mongodata:
+services:
+    rabbitmq:
+        image: rabbitmq:3-management-alpine
+        restart: always
+        ports:
+            - "5672:5672"
+            - "15672:15672"
+        environment:
+            - RABBITMQ_DEFAULT_USER=rmq_user
+            - RABBITMQ_DEFAULT_PASS=rmq_password
+            - RABBITMQ_DEFAULT_VHOST=ws_game
+
+#    commands_service:
+#        image: commands_service
+#        environment:
+#            - RABBIT_URI=amqp://rmq_user:rmq_password@rabbitmq:5672/chomikuj_controller
+#        depends_on:
+#            - rabbitmq

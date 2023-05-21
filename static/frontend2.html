@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MMORPG</title>
+    <style>
+        .app {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+        }
+        .interface {
+          display: flex;
+          justify-content: space-around;
+        }
+        .container {
+          background: black;
+          display: inline-block;
+          border: 5px solid black;
+        }
+        .board {
+          display: grid;
+          grid-template-columns: repeat(3, 80px);
+          grid-template-rows: repeat(3, 80px);
+          grid-gap: 5px;
+        }
+        .cell {
+           /* center the cell content */
+          justify-content: center;
+          align-items: center;
+          display: flex;
+          font-family: Arial;
+          font-size: 3rem;
+          font-weight: bold;
+          background: white;
+        }
+    </style>
+
+</head>
+<body>
+    <script>
+
+    </script>
+    <div class="app">
+        <div>
+            <h1>MMORPG</h1>
+        </div>
+        <div class="interface">
+            <div>
+                <div class="container">
+                    <div class="board">
+                        <div class="cell" data-x="0" data-y="0"></div>
+                        <div class="cell" data-x="1" data-y="0"></div>
+                        <div class="cell" data-x="2" data-y="0"></div>
+                        <div class="cell" data-x="0" data-y="1"></div>
+                        <div class="cell" data-x="1" data-y="1"></div>
+                        <div class="cell" data-x="2" data-y="1"></div>
+                        <div class="cell" data-x="0" data-y="2"></div>
+                        <div class="cell" data-x="1" data-y="2"></div>
+                        <div class="cell" data-x="2" data-y="2"></div>
+                    </div>
+                </div>
+            </div>
+            <div class="log_container">
+                <h2>Log</h2>
+                <ul id="log"></ul>
+            </div>
+        </div>
+        <script>
+            let clientId = null;
+            let playerColor = null;
+
+            let ws = new WebSocket("ws://localhost:7000/ws")
+            const divPlayers = document.getElementById("divPlayers");
+            const divBoard = document.getElementById("divBoard");
+
+
+            function movePlayerToCell(event) {
+            let el = event.currentTarget
+            ws.send(
+                JSON.stringify(
+                    {
+                        "method": "MOVE",
+                        "payload": [
+                            el.getAttribute("data-x"),
+                            el.getAttribute("data-y"),
+                        ]
+                    }
+                )
+            )
+            }
+
+            ws.onmessage = message => {
+            const response = JSON.parse(message.data);
+
+            if (!response.success) { return }
+
+            if (response.method == "UPDATE_BOARD") {
+                for(let y=0; y<response.payload.board.length; y++) {
+                    for(let x=0; x<response.payload.board[y].length; x++) {
+                        const color = response.payload.board[y][x];
+                        const cellObject = document.querySelector(`.cell[data-x='${x}'][data-y='${y}']`);
+                        cellObject.style.backgroundColor = color
+                    }
+                }
+            } else if (response.method == "MSG") {
+                    let li = document.createElement("li")
+                    console.log(li)
+                    console.log(response.text)
+                    li.appendChild(document.createTextNode(response.text))
+                    console.log(li)
+                    document.getElementById("log").appendChild(li)
+                    console.log(document.getElementById("log"))
+            }
+
+            };
+            const cells = document.querySelectorAll(".cell");
+            cells.forEach((cell) => {cell.addEventListener("click", movePlayerToCell)});
+        </script>
+    </div>
+</body>
+</html>
