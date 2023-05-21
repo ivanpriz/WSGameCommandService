@@ -19,8 +19,7 @@ services:
             retries: 5
 
     commands_service:
-#        build: ${COMMAND_SERVICE_PATH}
-        image: commands_service
+        build: https://github.com/ivanpriz/WSGameCommandService.git#feature/docker
         command: uvicorn app:app --host 0.0.0.0 --port 5252
         volumes:
             - .:/app
@@ -38,9 +37,7 @@ services:
         restart: always
 
     users_service:
-#        build: ${USERS_SERVICE_PATH}
-#        command: python3 entrypoint.py
-        image: users_service
+        build: https://github.com/ivanpriz/WSGameUsersService.git#feature/docker
         volumes:
             - .:/app
         environment:
@@ -54,9 +51,7 @@ services:
         restart: always
 
     render_service:
-#        build: ${RENDER_SERVICE_PATH}
-#        command: python3 entrypoint.py
-        image: render_service
+        build: https://github.com/ivanpriz/WSGameRenderService.git#feature/docker
         volumes:
             - .:/app
         environment:
