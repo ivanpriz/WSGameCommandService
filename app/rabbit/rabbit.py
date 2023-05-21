@@ -61,12 +61,3 @@ class Rabbit:
         if not self.channel or self.channel.is_closed:
             raise Exception("No channel to declare queue!")
         return await self.channel.declare_queue(name, durable=durable, exclusive=exclusive)
-
-    # TODO
-    # Add methods to decalre queues - done
-    # Move user management to separate service (binding color and name to id)
-    # Make app to communicate with
-    # Move renderer to separate service
-    # Make it communicate with users service to get name and color
-    # Change command schema to not include username and color, because services will obtain actual data from users service
-    # * If some time left: make user service to use redis
