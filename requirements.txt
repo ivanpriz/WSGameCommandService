@@ -4,3 +4,4 @@ uvicorn==0.22.0
 aio-pika==9.0.7
 environs==9.5.0
 dataclasses-json==0.5.7
+aioredis==2.0.1
