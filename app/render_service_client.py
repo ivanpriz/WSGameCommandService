@@ -29,6 +29,7 @@ class RenderServiceClient:
         self._process_rendered_board = process_board
 
     async def render_board(self, command: Command):
+        self._logger.debug("Rendering board for command: %s", command)
         await self.rabbit.channel.default_exchange.publish(
             aio_pika.Message(
                 body=command.to_json().encode("utf-8"),
@@ -36,14 +37,20 @@ class RenderServiceClient:
             ),
             routing_key=Config.BOARDS_TO_RENDER_QUEUE
         )
+        self._logger.debug(
+            "Command %s sent to render service to default exchange with routing key %s",
+            command,
+            Config.BOARDS_TO_RENDER_QUEUE
+        )
 
     async def _callback(self, rabbit_msg: AbstractIncomingMessage):
         async with rabbit_msg.process():
             payload = rabbit_msg.body.decode()
             self._logger.debug("Received board: %s", payload)
-            board = Message.from_json(payload)
+            board = Response.from_json(payload)
             self._logger.debug("Processing board %s", board)
             await self._process_rendered_board(board)
+            self._logger.debug("Board processing finished!")
 
     async def start(self):
         self._logger.debug("Going to start users api client...")
@@ -52,9 +59,14 @@ class RenderServiceClient:
             durable=True,
         )
         self.rendered_boards_queue = await self.rabbit.declare_queue(
-            Config.RENDERED_BOARDS_QUEUE,
+            f"RENDERED_BOARDS_QUEUE_{Config.INSTANCE_ID}",
             durable=True,
         )
+        rendered_boards_exchange = await self.rabbit.declare_exchange(
+            Config.RENDERED_BOARDS_EXCHANGE,
+            _type=aio_pika.ExchangeType.FANOUT,
+        )
+        await self.rendered_boards_queue.bind(rendered_boards_exchange, "")
         asyncio.create_task(
             self.rendered_boards_queue.consume(
                 callback=self._callback

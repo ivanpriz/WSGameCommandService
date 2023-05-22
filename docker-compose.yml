@@ -51,6 +51,7 @@ services:
             - USERS_TO_CREATE_QUEUE=CREATE_USERS
             - USERS_TO_DELETE_QUEUE=DELETE_USERS
             - BOARDS_TO_RENDER_QUEUE=BOARDS_TO_RENDER_QUEUE
+            - RENDERED_BOARDS_EXCHANGE=RENDERED_BOARDS_EXCHANGE
             - MESSAGES_EXCHANGE=MESSAGES_EXCHANGE
             - PORT=5252
             - REDIS_TOPIC_NAME=fastapi:messages
@@ -74,6 +75,7 @@ services:
             - USERS_TO_CREATE_QUEUE=CREATE_USERS
             - USERS_TO_DELETE_QUEUE=DELETE_USERS
             - BOARDS_TO_RENDER_QUEUE=BOARDS_TO_RENDER_QUEUE
+            - RENDERED_BOARDS_EXCHANGE=RENDERED_BOARDS_EXCHANGE
             - MESSAGES_EXCHANGE=MESSAGES_EXCHANGE
             - PORT=5252
             - REDIS_TOPIC_NAME=fastapi:messages
@@ -97,6 +99,7 @@ services:
             - USERS_TO_CREATE_QUEUE=CREATE_USERS
             - USERS_TO_DELETE_QUEUE=DELETE_USERS
             - BOARDS_TO_RENDER_QUEUE=BOARDS_TO_RENDER_QUEUE
+            - RENDERED_BOARDS_EXCHANGE=RENDERED_BOARDS_EXCHANGE
             - MESSAGES_EXCHANGE=MESSAGES_EXCHANGE
             - PORT=5252
             - REDIS_TOPIC_NAME=fastapi:messages
@@ -129,6 +132,7 @@ services:
         environment:
             - RABBITMQ_URI=amqp://rmq_user:rmq_password@rabbitmq:5672/ws_game
             - BOARDS_TO_RENDER_QUEUE=BOARDS_TO_RENDER_QUEUE
+            - RENDERED_BOARDS_EXCHANGE=RENDERED_BOARDS_EXCHANGE
             - MESSAGES_EXCHANGE=MESSAGES_EXCHANGE
         depends_on:
             - rabbitmq

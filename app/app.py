@@ -39,7 +39,7 @@ async def process_rendered_board(response: Response):
 
 rabbit = Rabbit(Config.RABBITMQ_URI)
 user_service_client = UsersServiceClient(rabbit)
-render_service_client = RenderServiceClient(rabbit, process_board=process_rendered_board())
+render_service_client = RenderServiceClient(rabbit, process_board=process_rendered_board)
 logs_receiver = LogsReceiver(rabbit, process_log=process_log)
 logger = get_logger("App")
 
@@ -81,6 +81,7 @@ app.add_middleware(
 async def get():
     with open("./static/game_client.html", "r") as f:
         return HTMLResponse(f.read())
+
 
 async def redis_msg_callback(redis_msg: dict):
     await conn_manager.broadcast(redis_msg)
