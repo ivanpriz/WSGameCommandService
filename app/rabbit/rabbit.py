@@ -61,3 +61,10 @@ class Rabbit:
         if not self.channel or self.channel.is_closed:
             raise Exception("No channel to declare queue!")
         return await self.channel.declare_queue(name, durable=durable, exclusive=exclusive)
+
+    async def declare_exchange(self, name: str, _type: str) -> aio_pika.abc.AbstractExchange:
+        return await self.channel.declare_exchange(
+            name=name,
+            type=_type,
+            durable=True,
+        )

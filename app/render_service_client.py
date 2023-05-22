@@ -1,4 +1,8 @@
+import asyncio
 import random
+
+import aio_pika
+from aio_pika.abc import AbstractIncomingMessage
 
 from app.schemas import (
     CommandMethods,
@@ -18,65 +22,42 @@ from app.config import Config
 class RenderServiceClient:
     _logger = get_logger("RenderServiceClient")
 
-    def __init__(self, rabbit: Rabbit):
+    def __init__(self, rabbit: Rabbit, process_board):
         self.rabbit = rabbit
-        self.renderer_rpc_client = RPCClient(
-            rabbit=self.rabbit,
-            publish_routing_key=Config.RENDER_BOARD_QUEUE,
+        self.boards_to_render_queue = None
+        self.rendered_boards_queue = None
+        self._process_rendered_board = process_board
+
+    async def render_board(self, command: Command):
+        await self.rabbit.channel.default_exchange.publish(
+            aio_pika.Message(
+                body=command.to_json().encode("utf-8"),
+                content_type="application/json",
+            ),
+            routing_key=Config.BOARDS_TO_RENDER_QUEUE
         )
 
-    async def process_command(self, command: Command):
-        if command.method == CommandMethods.MOVE.value:
-            try:
-                response = await self.renderer_rpc_client.call(
-                    data=command.to_json(),
-                    content_type="application/json",
-                )
-                return Response.from_json(response)
-
-            except Exception as e:
-                return Response(
-                    method=ResponseMethods.UPDATE_BOARD.value,
-                    success=False,
-                    payload=None,
-                )
-
-        elif command.method == CommandMethods.JOIN.value:
-            try:
-                response = await self.renderer_rpc_client.call(
-                    data=command.to_json(),
-                    content_type="application/json",
-                )
-                return Response.from_json(response)
-
-            except Exception as e:
-                return Response(
-                    method=ResponseMethods.UPDATE_BOARD.value,
-                    success=False,
-                    payload=None
-                )
-
-        elif command.method == CommandMethods.DISCONNECT.value:
-            try:
-                response = await self.renderer_rpc_client.call(
-                    data=command.to_json(),
-                    content_type="application/json",
-                )
-                return Response.from_json(response)
-
-            except Exception as e:
-                return Response(
-                    method=ResponseMethods.UPDATE_BOARD.value,
-                    success=False,
-                    payload={
-                        "board": None,
-                    }
-                )
-
-        else:
-            raise Exception(f"Command method {command.method} not supported!")
+    async def _callback(self, rabbit_msg: AbstractIncomingMessage):
+        async with rabbit_msg.process():
+            payload = rabbit_msg.body.decode()
+            self._logger.debug("Received board: %s", payload)
+            board = Message.from_json(payload)
+            self._logger.debug("Processing board %s", board)
+            await self._process_rendered_board(board)
 
     async def start(self):
         self._logger.debug("Going to start users api client...")
-        await self.renderer_rpc_client.start()
-        self._logger.debug("Users api client started!")
+        self.boards_to_render_queue = await self.rabbit.declare_queue(
+            Config.BOARDS_TO_RENDER_QUEUE,
+            durable=True,
+        )
+        self.rendered_boards_queue = await self.rabbit.declare_queue(
+            Config.RENDERED_BOARDS_QUEUE,
+            durable=True,
+        )
+        asyncio.create_task(
+            self.rendered_boards_queue.consume(
+                callback=self._callback
+            )
+        )
+        self._logger.debug("Render service client started!")
