@@ -26,21 +26,21 @@ class RPCClient:
 
     async def start(self):
         await self._connect_to_rabbit_if_not()
-        self._logger.debug("Rabbit connected for rpc of q %s", self.publish_routing_key)
+        # self._logger.debug("Rabbit connected for rpc of q %s", self.publish_routing_key)
         self.callback_queue = await self.rabbit.declare_queue(exclusive=True)
-        self._logger.debug("Callback q for q %s decalred!", self.publish_routing_key)
+        # self._logger.debug("Callback q for q %s decalred!", self.publish_routing_key)
         await self.callback_queue.consume(self._on_response, no_ack=True)
-        self._logger.debug("RPC server for q %s started!", self.publish_routing_key)
+        # self._logger.debug("RPC server for q %s started!", self.publish_routing_key)
         return self
 
     async def _on_response(self, message: AbstractIncomingMessage):
         if message.correlation_id is None:
-            self._logger.debug("Message with no corr_id in rpc for q %s: %s!", self.publish_routing_key, message)
+            # self._logger.debug("Message with no corr_id in rpc for q %s: %s!", self.publish_routing_key, message)
             return
 
         future: asyncio.Future = self.futures.pop(message.correlation_id)
         future.set_result(message.body)
-        self._logger.debug("RPC for q %s processed message!", self.publish_routing_key)
+        # self._logger.debug("RPC for q %s processed message!", self.publish_routing_key)
 
     async def call(
             self,
@@ -62,18 +62,18 @@ class RPCClient:
             ),
             routing_key=self.publish_routing_key,
         )
-        self._logger.debug(
-            "RPC client for q %s published log with corr_id %s",
-            self.publish_routing_key,
-            correlation_id,
-        )
+        # self._logger.debug(
+        #     "RPC client for q %s published log with corr_id %s",
+        #     self.publish_routing_key,
+        #     correlation_id,
+        # )
 
         res = await future
         decoded_res = res.decode()
-        self._logger.debug(
-            "RPC client for q %s got response %s corr_id %s",
-            self.publish_routing_key,
-            decoded_res,
-            correlation_id,
-        )
+        # self._logger.debug(
+        #     "RPC client for q %s got response %s corr_id %s",
+        #     self.publish_routing_key,
+        #     decoded_res,
+        #     correlation_id,
+        # )
         return decoded_res

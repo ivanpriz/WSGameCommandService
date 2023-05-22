@@ -1,3 +1,4 @@
+import aio_pika
 from aio_pika.abc import AbstractIncomingMessage
 
 from app.rabbit import Rabbit
@@ -22,5 +23,13 @@ class LogsReceiver:
             await self._process_log(log, log.conn_id)
 
     async def start(self):
-        q = await self._rabbit.declare_queue(Config.MESSAGES_QUEUE)
+        msgs_exchange = await self._rabbit.declare_exchange(
+            Config.MESSAGES_EXCHANGE,
+            _type=aio_pika.ExchangeType.FANOUT
+        )
+        q = await self._rabbit.channel.declare_queue(
+            f"MESSAGE_QUEUE_{Config.INSTANCE_ID}",
+            durable=True
+        )
+        await q.bind(exchange=msgs_exchange)
         await q.consume(callback=self._callback)
